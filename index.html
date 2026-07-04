@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firewood Books</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="disclaimerOverlay" class="overlay hidden">
+  <div class="overlay-box">
+    <h2>Welcome to Firewood Books</h2>
+    <p>This tool helps you keep organized records. Please consult a tax professional or your state's Department of Revenue about your specific tax obligations.</p>
+    <button id="disclaimerOkBtn" class="btn btn-primary btn-large">Got it, let's go</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<header class="app-header no-print">
+  <div class="brand">🪵 <span>Firewood Books</span></div>
+</header>
+
+<nav class="tab-nav no-print" id="mainNav">
+  <button type="button" class="tab-btn active" data-view="dashboard">🏠<span>Home</span></button>
+  <button type="button" class="tab-btn" data-view="sales">💵<span>Money In</span></button>
+  <button type="button" class="tab-btn" data-view="expenses">💸<span>Money Out</span></button>
+  <button type="button" class="tab-btn" data-view="mileage">🚚<span>Mileage</span></button>
+  <button type="button" class="tab-btn" data-view="inventory">🪓<span>Wood Inventory</span></button>
+  <button type="button" class="tab-btn" data-view="reports">📊<span>Reports</span></button>
+  <button type="button" class="tab-btn" data-view="backup">💾<span>Backup</span></button>
+</nav>
+
+<main>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="view-dashboard" class="view active">
+    <h1>Home</h1>
+    <div class="tile-grid">
+      <div class="tile">
+        <div class="tile-label">Money In — This Month</div>
+        <div class="tile-value" id="dashMonthIncome">$0.00</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Money Out — This Month</div>
+        <div class="tile-value" id="dashMonthExpenses">$0.00</div>
+      </div>
+      <div class="tile tile-accent">
+        <div class="tile-label">Net Profit — This Month</div>
+        <div class="tile-value" id="dashMonthNet">$0.00</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Money In — Year to Date</div>
+        <div class="tile-value" id="dashYtdIncome">$0.00</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Money Out — Year to Date</div>
+        <div class="tile-value" id="dashYtdExpenses">$0.00</div>
+      </div>
+      <div class="tile tile-accent">
+        <div class="tile-label">Net Profit — Year to Date</div>
+        <div class="tile-value" id="dashYtdNet">$0.00</div>
+      </div>
+    </div>
+    <div class="quick-actions">
+      <button type="button" class="btn btn-large btn-money-in" data-goto="sales">+ Add a Sale</button>
+      <button type="button" class="btn btn-large btn-money-out" data-goto="expenses">+ Add an Expense</button>
+    </div>
+    <p class="helper-text" id="sampleDataNote"></p>
+  </section>
+
+  <!-- ============ SALES (MONEY IN) ============ -->
+  <section id="view-sales" class="view">
+    <h1>Money In <span class="subtle">(Sales)</span></h1>
+    <form id="salesForm" class="entry-form">
+      <input type="hidden" id="saleEditId">
+      <div class="field-row">
+        <div class="field"><label>Date
+          <input type="date" id="saleDate" required>
+        </label></div>
+        <div class="field"><label>Customer name <span class="optional">(optional)</span>
+          <input type="text" id="saleCustomer" placeholder="e.g. J. Smith">
+        </label></div>
+      </div>
+      <div class="field"><label>Product
+        <input type="text" id="saleProduct" list="productSuggestions" placeholder="e.g. Face cord — seasoned oak" required>
+      </label>
+        <datalist id="productSuggestions"></datalist>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Quantity
+          <input type="number" id="saleQty" min="0" step="0.5" required>
+        </label></div>
+        <div class="field"><label>Unit
+          <input type="text" id="saleUnit" value="cords">
+        </label></div>
+        <div class="field"><label>Price per unit
+          <input type="number" id="salePrice" min="0" step="0.01" required>
+        </label></div>
+      </div>
+      <div class="field"><label>Payment method
+        <select id="salePayment"></select>
+      </label></div>
+      <details class="optional-details">
+        <summary>+ Sales tax (optional)</summary>
+        <p class="helper-text">Not sure if firewood is taxable in your state? Check with your state's Department of Revenue. Sales tax you collect is tracked separately — it is not counted as your income.</p>
+        <div class="field"><label>Sales tax collected
+          <input type="number" id="saleTax" min="0" step="0.01" value="0">
+        </label></div>
+      </details>
+      <div class="field total-display">Total: <span id="saleTotalDisplay">$0.00</span></div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-large" id="saleSubmitBtn">Add Sale</button>
+        <button type="button" class="btn btn-cancel hidden" id="saleCancelEdit">Cancel Edit</button>
+      </div>
+    </form>
+
+    <div class="log-section">
+      <div class="log-header">
+        <h2>Sales Log</h2>
+        <div class="filter-row">
+          <label>From <input type="date" id="salesFilterFrom"></label>
+          <label>To <input type="date" id="salesFilterTo"></label>
+          <button type="button" class="btn btn-small" id="salesFilterClear">Clear filter</button>
+          <button type="button" class="btn btn-small" id="salesSortToggle">Newest first ↓</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Qty</th><th>Price/unit</th><th>Tax</th><th>Total</th><th>Payment</th><th></th></tr></thead>
+          <tbody id="salesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EXPENSES (MONEY OUT) ============ -->
+  <section id="view-expenses" class="view">
+    <h1>Money Out <span class="subtle">(Expenses)</span></h1>
+    <form id="expenseForm" class="entry-form">
+      <input type="hidden" id="expenseEditId">
+      <div class="field-row">
+        <div class="field"><label>Date
+          <input type="date" id="expenseDate" required>
+        </label></div>
+        <div class="field"><label>Vendor
+          <input type="text" id="expenseVendor" placeholder="e.g. Home Depot" required>
+        </label></div>
+      </div>
+      <div class="field"><label>Description
+        <input type="text" id="expenseDescription" placeholder="e.g. Chainsaw chain" required>
+      </label></div>
+      <div class="field-row">
+        <div class="field"><label>Amount
+          <input type="number" id="expenseAmount" min="0" step="0.01" required>
+        </label></div>
+        <div class="field"><label>Category
+          <select id="expenseCategory"></select>
+        </label></div>
+      </div>
+      <div class="field"><label>Payment method
+        <select id="expensePayment"></select>
+      </label></div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-large" id="expenseSubmitBtn">Add Expense</button>
+        <button type="button" class="btn btn-cancel hidden" id="expenseCancelEdit">Cancel Edit</button>
+      </div>
+    </form>
+
+    <div class="log-section">
+      <div class="log-header">
+        <h2>Expense Log</h2>
+        <div class="filter-row">
+          <label>From <input type="date" id="expensesFilterFrom"></label>
+          <label>To <input type="date" id="expensesFilterTo"></label>
+          <button type="button" class="btn btn-small" id="expensesFilterClear">Clear filter</button>
+          <button type="button" class="btn btn-small" id="expensesSortToggle">Newest first ↓</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Vendor</th><th>Description</th><th>Category</th><th>Amount</th><th>Payment</th><th></th></tr></thead>
+          <tbody id="expensesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MILEAGE ============ -->
+  <section id="view-mileage" class="view">
+    <h1>Mileage Tracker</h1>
+    <form id="mileageForm" class="entry-form">
+      <input type="hidden" id="mileageEditId">
+      <div class="field-row">
+        <div class="field"><label>Date
+          <input type="date" id="mileageDate" required>
+        </label></div>
+        <div class="field"><label>Miles
+          <input type="number" id="mileageMiles" min="0" step="0.1" required>
+        </label></div>
+      </div>
+      <div class="field"><label>Trip purpose
+        <input type="text" id="mileagePurpose" placeholder="e.g. Delivery to J. Smith" required>
+      </label></div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-large" id="mileageSubmitBtn">Log Trip</button>
+        <button type="button" class="btn btn-cancel hidden" id="mileageCancelEdit">Cancel Edit</button>
+      </div>
+    </form>
+    <p class="helper-text">This tracks miles only — it doesn't calculate a dollar deduction. Ask your tax preparer about the current IRS standard mileage rate if you want to figure that out.</p>
+
+    <div class="log-section">
+      <div class="log-header">
+        <h2>Trip Log</h2>
+        <div class="filter-row">
+          <label>From <input type="date" id="mileageFilterFrom"></label>
+          <label>To <input type="date" id="mileageFilterTo"></label>
+          <button type="button" class="btn btn-small" id="mileageFilterClear">Clear filter</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Purpose</th><th>Miles</th><th></th></tr></thead>
+          <tbody id="mileageTableBody"></tbody>
+        </table>
+      </div>
+      <p class="log-total" id="mileageTotalDisplay"></p>
+    </div>
+  </section>
+
+  <!-- ============ INVENTORY ============ -->
+  <section id="view-inventory" class="view">
+    <h1>Wood Inventory <span class="subtle">(optional — for planning, not taxes)</span></h1>
+    <form id="inventoryForm" class="entry-form">
+      <input type="hidden" id="invEditId">
+      <div class="field-row">
+        <div class="field"><label>Date cut
+          <input type="date" id="invDateCut" required>
+        </label></div>
+        <div class="field"><label>Wood type / description
+          <input type="text" id="invWoodType" placeholder="e.g. Oak, mixed hardwood" required>
+        </label></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Quantity cut
+          <input type="number" id="invQty" min="0" step="0.5" required>
+        </label></div>
+        <div class="field"><label>Unit
+          <input type="text" id="invUnit" value="cords">
+        </label></div>
+        <div class="field"><label>Seasoning status
+          <select id="invStatus">
+            <option value="auto">Auto (based on cut date)</option>
+            <option value="Green">Green</option>
+            <option value="Seasoning">Seasoning</option>
+            <option value="Seasoned">Seasoned</option>
+          </select>
+        </label></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-large" id="invSubmitBtn">Add Batch</button>
+        <button type="button" class="btn btn-cancel hidden" id="invCancelEdit">Cancel Edit</button>
+      </div>
+    </form>
+
+    <div class="log-section">
+      <h2>Batches</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cut Date</th><th>Wood Type</th><th>Cut</th><th>Sold</th><th>Remaining</th><th>Status</th><th>Log Sold</th><th></th></tr></thead>
+          <tbody id="inventoryTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REPORTS ============ -->
+  <section id="view-reports" class="view">
+    <h1>Reports</h1>
+    <div class="sub-nav no-print">
+      <button type="button" class="sub-tab-btn active" data-report="pnl">Profit &amp; Loss</button>
+      <button type="button" class="sub-tab-btn" data-report="quarterly">Quarterly Summary</button>
+      <button type="button" class="sub-tab-btn" data-report="taxtime">Tax Time Export</button>
+    </div>
+
+    <div id="report-pnl" class="report-panel active">
+      <div class="report-controls no-print">
+        <label><input type="radio" name="pnlPeriod" value="month" checked> Monthly</label>
+        <label><input type="radio" name="pnlPeriod" value="year"> Yearly</label>
+        <input type="month" id="pnlMonthInput">
+        <input type="number" id="pnlYearInput" class="hidden" min="2000" max="2100">
+        <button type="button" class="btn btn-small" id="pnlPrintBtn">🖨️ Print this report</button>
+      </div>
+      <div id="pnlContent" class="printable"></div>
+    </div>
+
+    <div id="report-quarterly" class="report-panel">
+      <div class="report-controls no-print">
+        <label>Year <input type="number" id="quarterlyYearInput" min="2000" max="2100"></label>
+        <button type="button" class="btn btn-small" id="quarterlyPrintBtn">🖨️ Print this report</button>
+      </div>
+      <div id="quarterlyContent" class="printable"></div>
+    </div>
+
+    <div id="report-taxtime" class="report-panel">
+      <div class="report-controls no-print">
+        <label>Tax Year <input type="number" id="taxYearInput" min="2000" max="2100"></label>
+        <button type="button" class="btn btn-primary" id="taxCsvBtn">⬇️ Download CSV</button>
+        <button type="button" class="btn btn-small" id="taxPrintBtn">🖨️ Print this report</button>
+      </div>
+      <div id="taxtimeContent" class="printable"></div>
+    </div>
+  </section>
+
+  <!-- ============ BACKUP & SETTINGS ============ -->
+  <section id="view-backup" class="view">
+    <h1>Backup &amp; Settings</h1>
+    <p class="helper-text">Your data is stored only on this computer, in this browser. If the browser's storage is ever cleared, your records will be lost unless you've backed up. Export a backup file regularly (for example, once a month) and keep a copy somewhere safe.</p>
+
+    <div class="field"><label>Business name <span class="optional">(shown on printed reports)</span>
+      <input type="text" id="businessNameInput" placeholder="e.g. Smith Family Firewood">
+    </label></div>
+
+    <div class="backup-actions">
+      <button type="button" class="btn btn-primary btn-large" id="exportBtn">⬇️ Export Backup File</button>
+      <label class="btn btn-large btn-secondary" for="importFile">⬆️ Import Backup File</label>
+      <input type="file" id="importFile" accept="application/json" class="hidden-input">
+    </div>
+
+    <hr>
+    <div class="danger-zone">
+      <h2>Start Fresh</h2>
+      <p>This app came pre-loaded with sample data so you can see how it works. When you're ready to enter your real records, clear the samples first.</p>
+      <button type="button" class="btn btn-danger" id="clearSampleBtn">Clear All Data &amp; Start Fresh</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
