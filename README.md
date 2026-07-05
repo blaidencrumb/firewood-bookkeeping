@@ -28,8 +28,16 @@ This app helps you keep organized, consistent records for a sole-proprietor fire
 
 ## Files
 
-- `index.html` — the app
-- `style.css` — styling
-- `app.js` — all the logic and data handling
+- `index.html` — the entire app: markup, styling, and logic in one self-contained file (fonts are embedded too, so it never phones home)
 
 No build step, no dependencies, no framework — just open the file. It should keep working for as long as web browsers exist.
+
+## Sharing it with someone else
+
+If someone tries to open `index.html` as a phone email/text attachment, it may load into a restrictive built-in preview that won't accept typing (a phone-OS limitation, not a bug in the app). The most reliable fix is to host it as a real webpage instead:
+
+1. On GitHub, go to this repo's **Settings → Pages**
+2. Under "Build and deployment," set **Source** to "Deploy from a branch," **Branch** to `main`, folder `/ (root)`, then **Save**
+3. After a minute, the app is live at `https://<your-username>.github.io/firewood-bookkeeping/` — share that link instead of the file
+
+Anyone opening that link gets a normal webpage in their own browser, with their own private data saved locally on their own device.
